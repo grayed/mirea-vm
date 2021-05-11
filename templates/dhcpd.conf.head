@@ -1,0 +1,17 @@
+option  domain-name "example.org";
+option  domain-name-servers 10.0.0.1;
+option	ntp-servers 10.0.0.1;
+
+subnet 10.0.0.0 netmask 255.0.0.0 {
+	range 10.0.1.1 10.0.1.254;
+	option routers 10.0.0.1;
+	use-host-decl-names on;
+
+	host stor {
+		hardware ethernet 0a:00:00:00:00:02;
+		fixed-address 10.0.0.2;
+	}
+
+	group {
+		filename "auto_install";
+		next-server 10.0.0.2;

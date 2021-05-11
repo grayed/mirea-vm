@@ -1,0 +1,15 @@
+$TTL 86400
+$ORIGIN 10.in-addr.arpa.
+
+@	IN	SOA	ns.example.org.	admin.example.org. (
+						2021010101
+						3H ; refresh
+						15 ; retry
+						1w ; expire
+						3h ; minimum
+						)
+
+		NS ns.example.org.
+
+1.0.0		PTR	gw.example.org.
+2.0.0		PTR	stor.example.org.

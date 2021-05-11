@@ -1,0 +1,19 @@
+$ORIGIN example.org.
+$TTL 86400
+
+@	IN	SOA	ns.example.org.		admin.example.org. (
+				%TIMESTAMP%
+				28800
+				7200
+				864000
+				86400
+				)
+
+		NS	ns.example.org.
+
+		MX	10 mail.example.org.
+		TXT	"v=spf1 mx -all"
+
+		A	10.0.0.1
+gw		A	10.0.0.1
+stor		A	10.0.0.2

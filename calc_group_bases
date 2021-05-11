@@ -1,0 +1,18 @@
+#!/bin/ksh
+set -e
+set -u
+
+flow=$1
+year=$2
+gnum=$3
+
+flowcode=$(grep -n "^${flow}\$" groups/flows.list | sed 's/:.*//')
+test -n "$flowcode" || { echo "invalid flow name: $flow" >&2; false; }
+
+gcode=${flowcode}${gnum}
+
+# print MAC base, then IP base, then reversed IP base (without .10)
+printf "0a:00:%02d:%02d:%02d:   10.%d.%d.   .%d.%d\n" \
+	$flowcode $year $gnum \
+	$gcode $year \
+	$year $gcode
