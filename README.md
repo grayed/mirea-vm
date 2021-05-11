@@ -8,10 +8,14 @@ a gateway, named 'gw', and storage, named 'stor'.
 
 Also, full control on MAC addressing and IP addressing is assumed.
 In particular, the 10/8 network usage is hardcoded.
-Almost everything else is tweakable: just add local.conf in
-the directory with `Makefile` and set appropriate variables.
+Almost everything else is tweakable, see below.
 
-## Input files
+## Setting up
+
+First, you should create the file `local.conf` in the same directory with `Makefile`.
+Set any variables you need to change there; it will be included by `Makefile`.
+You can use any value mentioned in `Makefile` up to the line
+telling that there are no more customizable items.
 
 Information about students should be put in files `groups/*.group'.
 Those files are text ones with the following structure:
@@ -40,6 +44,12 @@ Here `FLOW` is one of the registered in `groups/flows.list` values.
 only for distinction purposes.
 `NUMBER` is just ordinal number of the group in the given year's flow.
 
+Group files must reside in `groups` subdirectory.
+
+The `site` subdirectory should contain files that will go in `siteXY.tgz`.
+The `templates` subdirectory should contain skeleton files used to build actual configuration.
+Feel free to modify files in both of them.
+
 ## Gateway
 
 Runs DHCP server and nameserver. Also, it does SSH redirections to VMs via PF.
@@ -50,6 +60,24 @@ To build configuration for those, run:
 Look at the generated files, then apply configuration:
 
 	make install-gw
+
+By default, this will install:
+
+* /etc/dhcpd.conf
+* /etc/pf.vmredirs
+* /var/nsd/zones/master/10.in-addr.arpa
+* /var/nsd/zones/master/example.org
+
+For the second one, it's assumed you have something like that in your
+[https://man.openbsd.org/pf.conf.5](/etc/pf.conf):
+
+	anchor "vmlan" in on egress proto tcp to (egress) {
+	        include "/etc/pf.vmredirs"
+	}
+	pass in on egress tagged VM_SSH rtable 1
+
+It's a good idea to have student VMs running in separate routing domain for safety purposes,
+since students have full control over their machines and can send virtually anything to the network.
 
 ## Storage
 
@@ -62,3 +90,7 @@ If everything is good, put generated `FOO-install.conf` and `siteXY.tgz`
 files in the place they belong:
 
 	make install-stor
+
+By default, this will put OpenBSD installer's answer files into `/instsrc/install`,
+and the siteXY.tgz will go into `/instsrc/pub/OpenBSD/6.9/amd64`; the index.txt
+in the latter directory will be regenerated to make `siteXY.tgz` visible.
