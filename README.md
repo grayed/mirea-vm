@@ -12,7 +12,9 @@ Almost everything else is tweakable, see below.
 
 ## Setting up
 
-First, you should create the file `local.conf` in the same directory with `Makefile`.
+First, you need to install the ipv6calc package.
+
+Then you should create the file `local.conf` in the same directory with `Makefile`.
 Set any variables you need to change there; it will be included by `Makefile`.
 You can use any value mentioned in `Makefile` up to the line
 telling that there are no more customizable items.
