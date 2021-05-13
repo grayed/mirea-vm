@@ -117,13 +117,13 @@ after changing `${INST_RELEASE}`; make(1) will remind you about that.
 * `INST_CONF_DIR` - directory where host configuration for autoinstall should be put. Default: `${INST_ROOT}/install`.
 * `INST_RELEASE` - OS release to operate on. Default: `6.8` (subject to change in the future).
 * `INST_ARCH` - OS architecture to operate on. Default: `amd64`.
-* `IPV4_PREFIX` - defines IPv4 network for VMs. See also [Network layout](#Network%20layout). Default: 10.0.0.0/8. Note: only `/8` IPv4 prefixes are supported as of now.
-* `IPV6_PREFIX` - defines IPv6 network for VMs. See also [Network layout](#Network%20layout). Default: fc00::/48. Note: IPv6 prefix length must be in 16..96 range, and must be a multiple of 16.
+* `IPV4_PREFIX` - defines IPv4 network for VMs. See also [Network layout](#network-layout). Default: 10.0.0.0/8. Note: only `/8` IPv4 prefixes are supported as of now.
+* `IPV6_PREFIX` - defines IPv6 network for VMs. See also [Network layout](#network-layout). Default: fc00::/48. Note: IPv6 prefix length must be in 16..96 range, and must be a multiple of 16.
 * `LOGIN_PREFIX` - prefix used for student logins. It's assumed that logins look like ${LOGIN_PREFIX}**ID**, where ID is unique. Can be set together with `LOGIN_SUFFIX`. See also `PF_PORT_BASE`. Default: `st`.
 * `LOGIN_SUFFIX` - suffix used for student logins. It's assumed that logins look like **ID**${LOGIN_SUFFIX}, where ID is unique. Can be set together with `LOGIN_PREFIX`. See also `PF_PORT_BASE`. Default: empty.
 * `MAC_PREFIX` - MAC address prefix used in DHCP server configuration. Must be in form of `ab:cd:`. Default: `0a:00:`.
 * `PF_TAG` - PF tag to applied to incoming VM SSH connections on gateway. Default: `VM_SSH`.
-* `PF_REDIR_FILE` - where to install generated PF rules file. Default: `/etc/pf.vmredirs`. Note: this file must be manually included in /etc/pf.conf, see [Gateway](#Gateway).
+* `PF_REDIR_FILE` - where to install generated PF rules file. Default: `/etc/pf.vmredirs`. Note: this file must be manually included in /etc/pf.conf, see [Gateway](#gateway).
 * `PF_PORT_BASE` - starting port number used for redirecting SSH connections to VMs. Actual port number is calcuated by adding `PF_PORT_BASE` and user ID, see `LOGIN_PREFIX` and `LOGIN_SUFFIX`. Default: `22000`.
 * `RSYNC_MIRROR` - defines source URI to be used by sync script. Default: `rsync://mirror.leaseweb.com/openbsd`.
 * `TFTP_DIR` - chroot directory used by `[tftpd\(8\)](https://man.openbsd.org/tftpd.8)`.
