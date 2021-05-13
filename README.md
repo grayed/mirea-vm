@@ -96,3 +96,85 @@ files in the place they belong:
 By default, this will put OpenBSD installer's answer files into `/instsrc/install`,
 and the siteXY.tgz will go into `/instsrc/pub/OpenBSD/X.Y/amd64`; the index.txt
 in the latter directory will be regenerated to make `siteXY.tgz` visible.
+
+There is a script supplied, `sync.sh`, which is designed to be run from crontab
+periodically to download current and previous OpenBSD release sets and packages
+for given architecture.
+
+## Twekable parameters
+
+* `DHCPD_CONF_FILE` - where to install dhcpd(8) configuration file. Default is `/etc/dhcpd.conf`.
+* `DNS_FORW_ZONE` - DNS zone to be filled. Default: `example.org`.
+* `DNS_ZONES_DIR` - directory where to install DNS zone files. Default: `/var/nsd/zones/master`.
+* `INST_ROOT` - directory where actual file and host configuration storage resides. Default: `/instsrc'.
+* `INST_CONF_DIR` - directory where host configuration for autoinstall should be put. Default: `${INST_ROOT}/install`.
+* `INST_RELEASE` - OS release to operate on. Default: `6.8` (subject to change in the future).
+* `INST_ARCH` - OS architecture to operate on. Default: `amd64`.
+* `IPV4_PREFIX` - defines IPv4 network for VMs. See also [Network layout](#Network%20layout). Default: 10.0.0.0/8. Note: only `/8` IPv4 prefixes are supported as of now.
+* `IPV6_PREFIX` - defines IPv6 network for VMs. See also [Network layout](#Network%20layout). Default: fc00::/48. Note: IPv6 prefix length must be in 16..96 range, and must be a multiple of 16.
+* `LOGIN_PREFIX` - prefix used for student logins. It's assumed that logins look like ${LOGIN_PREFIX}**ID**, where ID is unique. Can be set together with `LOGIN_SUFFIX`. See also `PF_PORT_BASE`. Default: `st`.
+* `LOGIN_SUFFIX` - suffix used for student logins. It's assumed that logins look like **ID**${LOGIN_SUFFIX}, where ID is unique. Can be set together with `LOGIN_PREFIX`. See also `PF_PORT_BASE`. Default: empty.
+* `MAC_PREFIX` - MAC address prefix used in DHCP server configuration. Must be in form of `ab:cd:`. Default: `0a:00:`.
+* `PF_TAG` - PF tag to applied to incoming VM SSH connections on gateway. Default: `VM_SSH`.
+* `PF_REDIR_FILE` - where to install generated PF rules file. Default: `/etc/pf.vmredirs`. Note: this file must be manually included in /etc/pf.conf, see [Gateway](#Gateway).
+* `PF_PORT_BASE` - starting port number used for redirecting SSH connections to VMs. Actual port number is calcuated by adding `PF_PORT_BASE` and user ID, see `LOGIN_PREFIX` and `LOGIN_SUFFIX`. Default: `22000`.
+* `RSYNC_MIRROR` - defines source URI to be used by sync script. Default: `rsync://mirror.leaseweb.com/openbsd`.
+
+You can set any of those values in `local.conf`.
+Note: this file is included both by make- and shell-based components, so it must not contain spaces:
+
+	DNS_FORW_ZONE=my.lan
+	INST_RELEASE=6.9
+	IPV4_PREFIX=10.0.0.0/8
+	IPV6_PREFIX=fc00::/16
+	LOGIN_PREFIX=st
+	PF_PORT_BASE=12000
+	PF_REDIR_FILE=/etc/pf.vmredirs
+
+## Network layout
+
+Pretend we have the above mentioned setup for KVM-based VMs.
+There is only one flow defined, `cs`, and two groups of the same year: cs-20-1 and cs-20-2.
+First group has two students, with logins st121 and st102.
+Second group has one student, st89.
+Also, imagine that `vm-gateway.my.lan` is set as DMZ on internet gateway, so all incoming connections come on its `vio0` network interface.
+
+	[cs-20-1-1.my.lan]                    [ vm-gateway.my.lan ]
+	[      st121     ]                    [pf.vmredirs is here]
+	[      10.11.20.1]-----          vio1 [10.0.0.1           ]
+	[fc00:0120:0101::] vio0\       -------[fc00:0000:0001::   ]
+	                        \     /       [       192.168.1.42] vio0
+	[cs-20-1-3.my.lan]       \   /        [ fd00:0123:4567::42]----------      [   Internet gateway   ]
+	[      st102     ]        \ /                                        \     [       198.51.100.7/31]
+	[      10.11.20.3]---------+                                          \    [ 2001:db8:9402::873/64]---{ Internet }
+	[fc00:0120:0103::] vio0   / \                                          +---[192.168.1.1           ]
+	                         /   \        [ vm-storage.my.lan ] rdomain 1 /    [fd00:0123:4567::1     ]
+	[cs-20-2-1.my.lan]      /     \       [       192.168.1.49] vio1     /
+	[       st89     ]     /       \      [ fd00:0123:4567::49]----------
+	[      10.12.20.1]-----         ------[10.0.0.2           ]
+	[fc00:0120:0201::] vio0          vio0 [fc00:0000:0002::   ]
+	                            rdomain 0
+
+Say, student `st89` tries to connect to his/her VM.
+His/her ID is 89, so he/she should use TCP port 12102 on Internet gateway.
+The TCP handshake request is transferred to `vm-gateway.my.lan` on the same port.
+Here rules in `/etc/pf.vmredirs` are evaluated, resulting in further forwarding to normal SSH port on student's VM, `10.11.20.3`.
+This IPv4 address can be decrypted the following way:
+
+* **10.** - the configured IPv4 prefix;
+* **1** - flow ID;
+* **2** - group ordinal number (unique for the given flow and year);
+* **.20** - year (2020);
+* **.1** - student's ordinal number in group list.
+
+The corresponding IPv6 address has similar scheme:
+
+* **fc00:** - the configured IPv6 prefix;
+* **01** - flow ID;
+* **20** - year (2020);
+* **:02** - group ordinal number (unique for the given flow and year);
+* **01** - student's ordinal number in group list.
+
+Note that ever given IPv6 addresses support hexadecimal digits, we use only decimals, for better readability.
+
+As a convenience, utility VMs (e.g., vm-gateway and vm-storage) have corresponding numbers for flow ID, year and group ordinal numbers set to zero.
