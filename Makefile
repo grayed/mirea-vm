@@ -16,10 +16,11 @@ PF_REDIR_FILE ?=	/etc/pf.vmredirs
 PF_TAG ?=		VM_SSH
 PF_PORT_BASE ?=		22000
 
-INST_CONF_DIR ?=	/instsrc/install
+INST_ROOT ?=		/instsrc
+INST_CONF_DIR ?=	${INST_ROOT}/install
 INST_RELEASE ?=		6.8
 INST_ARCH ?=		amd64
-INST_DIST_DIR ?=	/instsrc/pub/OpenBSD/${INST_RELEASE}/${INST_ARCH}
+INST_DIST_DIR ?=	${INST_ROOT}/pub/OpenBSD/${INST_RELEASE}/${INST_ARCH}
 
 # end of customizable variables
 
