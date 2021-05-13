@@ -26,7 +26,7 @@ Those files are text ones with the following structure:
 
 where `NUMBER` is ordinal number of student in group (must not change!),
 `LOGIN` is his/her desired login name, `PASSWORD` is his/her password
-in encrypted form (see [https://man.openbsd.org/encrypt.1](encrypt\(1\))
+in encrypted form (see [encrypt\(1\)](https://man.openbsd.org/encrypt.1))
 and `NAME` is student's name of arbitrary form and length (spaces are allowed).
 Here's an example:
 
@@ -71,7 +71,7 @@ By default, this will install:
 * /var/nsd/zones/master/example.org
 
 For the second one, it's assumed you have something like that in your
-[https://man.openbsd.org/pf.conf.5](/etc/pf.conf):
+[/etc/pf.conf](https://man.openbsd.org/pf.conf.5):
 
 	anchor "vmlan" in on egress proto tcp to (egress) {
 	        include "/etc/pf.vmredirs"
