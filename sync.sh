@@ -1,18 +1,25 @@
 #!/bin/sh
 set -e
 
+d=${0%/*}
+test x"$d" != x"$0" || d=.
+test ! -e "$d/local.conf" || . "$d/local.conf"
+
 srvbase=${RSYNC_MIRROR:-rsync://mirror.leaseweb.com/openbsd}
 
-prev_release=$(echo $(( $(uname -r | sed 's/\.//g') - 1)) | sed 's/.$/.&/')
-releases="$prev_release $(uname -r)"
+cur_release=${INST_RELEASE:-6.8}
+prev_release=$(echo $(( $(echo "$cur_release" | sed 's/\.//g') - 1)) | sed 's/.$/.&/')
+releases="$prev_release $cur_release"
+arch=${INST_ARCH:-amd64}
+karch=${INST_ARCH:-amd64}
 
 dirs=
 rules="--exclude=index.txt"
 
 for r in $releases; do
-	dirs="$dirs syspatch/$r/$(uname -m)"
-	dirs="$dirs $r/$(uname -m)"
-	dirs="$dirs $r/packages/$(uname -p)"
+	dirs="$dirs syspatch/$r/$arch"
+	dirs="$dirs $r/$karch"
+	dirs="$dirs $r/packages/$arch"
 
 	rules="$rules --exclude=site$(echo $r | sed 's/\.//g').tgz"
 done
