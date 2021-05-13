@@ -113,7 +113,7 @@ after changing `${INST_RELEASE}`; make(1) will remind you about that.
 * `DHCPD_CONF_FILE` - where to install dhcpd(8) configuration file. Default is `/etc/dhcpd.conf`.
 * `DNS_FORW_ZONE` - DNS zone to be filled. Default: `example.org`.
 * `DNS_ZONES_DIR` - directory where to install DNS zone files. Default: `/var/nsd/zones/master`.
-* `INST_ROOT` - directory where actual file and host configuration storage resides. Default: `/instsrc'.
+* `INST_ROOT` - directory where actual file and host configuration storage resides. Default: `/instsrc`.
 * `INST_CONF_DIR` - directory where host configuration for autoinstall should be put. Default: `${INST_ROOT}/install`.
 * `INST_RELEASE` - OS release to operate on. Default: `6.8` (subject to change in the future).
 * `INST_ARCH` - OS architecture to operate on. Default: `amd64`.
