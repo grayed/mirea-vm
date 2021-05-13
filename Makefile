@@ -22,6 +22,8 @@ INST_CONF_DIR ?=	${INST_ROOT}/install
 INST_RELEASE ?=		6.8
 INST_ARCH ?=		amd64
 
+TFTP_DIR ?=		/tftpboot
+
 # end of customizable variables
 
 GROUPS !=		cd ${.CURDIR}/groups; ls *.group | sed -e 's/\.group$$//'
@@ -53,7 +55,7 @@ INVERT_IPV6 = sed 's/./&./g' | awk -v RS=. // | tail -r \
 
 .PHONY: all clean
 .PHONY: gw install-gw install-dhcpd install-dns install-pf
-.PHONY: stor install-stor install-answers install-site
+.PHONY: stor install-stor install-answers install-site install-tftp
 
 all:
 	@echo please use either 'make gw' or 'make stor' >&2
@@ -64,10 +66,10 @@ clean:
 
 gw: dhcpd.conf dns_${DNS_FORW_ZONE} dns_${DNS_REV4_ZONE} dns_${DNS_REV6_ZONE} pf.vmredirs
 
-stor: ${INST_ANSWERS_COOKIE} ${INST_SITE_TGZ}
+stor: ${INST_ANSWERS_COOKIE} ${INST_SITE_TGZ} check-tftp
 
 install-gw: install-pf install-dhcpd install-dns
-install-stor: install-answers install-site
+install-stor: check-tftp install-answers install-site
 
 install-answers:
 
@@ -91,6 +93,22 @@ install-site:
 	install ${INST_SITE_TGZ} ${INST_DIST_DIR}/site${INST_RELEASE:C/\.//}.tgz
 	cd ${INST_DIST_DIR}; ls -l >index.txt
 
+install-tftp:
+	install -d -o root -g wheel -m 0755 ${TFTP_DIR}
+	install -o root -g wheel -m 0444 ${INST_DIST_DIR}/bsd.rd ${TFTP_DIR}/bsd
+	install -o root -g wheel -m 0444 ${INST_DIST_DIR}/pxeboot ${TFTP_DIR}/
+	ln -sf pxeboot ${TFTP_DIR}/auto_install
+	ln -sf pxeboot ${TFTP_DIR}/auto_upgrade
+
+check-tftp: .SILENT .IGNORE
+	( { cd ${INST_DIST_DIR}; sha256 -qC SHA256 bsd.rd pxeboot; } || \
+	{ echo "WARNING: bsd.rd and/or pxeboot are not downloaded yet, ${.MAKE} install-tftp is not available" >&2; false; } ) && \
+	( test -e ${TFTP_DIR}/bsd -a -e ${TFTP_DIR}/auto_install -a -e ${TFTP_DIR}/auto_upgrade -a -e ${TFTP_DIR}/pxeboot || \
+	{ echo "WARNING: TFTP directory is not filled yet, you may wish to run ${.MAKE} install-tftp" >&2; false; } ) && \
+	( cmp -s "${INST_DIST_DIR}/bsd.rd" "${TFTP_DIR}/bsd" || \
+	{ echo "WARNING: ${INST_DIST_DIR}/bsd.rd  differs from ${TFTP_DIR}/bsd;     need to run ${.MAKE} install-tftp" >&2; false; }; \
+	  cmp -s "${INST_DIST_DIR}/pxeboot" "${TFTP_DIR}/pxeboot" || \
+	{ echo "WARNING: ${INST_DIST_DIR}/pxeboot differs from ${TFTP_DIR}/pxeboot; need to run ${.MAKE} install-tftp" >&2; false; } )
 
 dhcpd.conf: gen-dhcpd-head
 gen-dhcpd-head: .USE templates/dhcpd.conf.head

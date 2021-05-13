@@ -100,6 +100,13 @@ in the latter directory will be regenerated to make `siteXY.tgz` visible.
 There is a script supplied, `sync.sh`, which is designed to be run from crontab
 periodically to download current and previous OpenBSD release sets and packages
 for given architecture.
+After running the script first time (successfully), it'll be possible to run
+
+	make install-tftp
+
+which will setup TFTP daemon's directory. You'll need to repeat this step
+after changing `${INST_RELEASE}`; make(1) will remind you about that.
+
 
 ## Twekable parameters
 
@@ -119,6 +126,7 @@ for given architecture.
 * `PF_REDIR_FILE` - where to install generated PF rules file. Default: `/etc/pf.vmredirs`. Note: this file must be manually included in /etc/pf.conf, see [Gateway](#Gateway).
 * `PF_PORT_BASE` - starting port number used for redirecting SSH connections to VMs. Actual port number is calcuated by adding `PF_PORT_BASE` and user ID, see `LOGIN_PREFIX` and `LOGIN_SUFFIX`. Default: `22000`.
 * `RSYNC_MIRROR` - defines source URI to be used by sync script. Default: `rsync://mirror.leaseweb.com/openbsd`.
+* `TFTP_DIR` - chroot directory used by `[tftpd\(8\)](https://man.openbsd.org/tftpd.8)`.
 
 You can set any of those values in `local.conf`.
 Note: this file is included both by make- and shell-based components, so it must not contain spaces:
