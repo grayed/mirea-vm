@@ -187,8 +187,8 @@ dhcpd.conf: gen-dhcpd-tail
 gen-dhcpd-tail: .USE templates/dhcpd.conf.tail
 	cat ${.CURDIR}/templates/dhcpd.conf.tail >>$@
 
-.if exist(templates/pf.vmredirs.tail)
+.if exists(templates/pf.vmredirs.tail)
 pf.vmredirs: gen-pf-redir-tail templates/pf.vmredirs.tail
 gen-pf-redir-tail: .USE
-	cat ${.CURDIR}/templates/pf.vmredirs.head >>$@
+	cat ${.CURDIR}/templates/pf.vmredirs.tail >>$@
 .endif
