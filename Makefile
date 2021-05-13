@@ -27,12 +27,22 @@ TFTP_DIR ?=		/tftpboot
 # end of customizable variables
 
 GROUPS !=		cd ${.CURDIR}/groups; ls *.group | sed -e 's/\.group$$//'
+.if empty(GROUPS)
+.BEGIN:
+	@echo WARNING: no student groups found
+.endif
 
 IPV4_PREFIX_LEN =	${IPV4_PREFIX:C,.*/,,}
 IPV6_PREFIX_LEN =	${IPV6_PREFIX:C,.*/,,}
 
+# XXX hack to avoid extraneous "ipv6calc not found" on storage nodes
+.ifmake gw || install-gw || install-dns
 DNS_REV4_ZONE !=	ipv6calc -q -O revipv4 ${IPV4_PREFIX} | sed 's/.$$//'
 DNS_REV6_ZONE !=	ipv6calc -q -O revnibbles.arpa ${IPV6_PREFIX} | sed 's/.$$//'
+.else
+DNS_REV4_ZONE =	foo
+DNS_REV6_ZONE =	bar
+.endif
 
 DNS_FORW_ZONE_FILE =	${DNS_ZONES_DIR}/${DNS_FORW_ZONE}
 DNS_REV4_ZONE_FILE =	${DNS_ZONES_DIR}/${DNS_REV4_ZONE}
