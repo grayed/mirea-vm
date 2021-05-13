@@ -3,6 +3,7 @@
 .endif
 
 LOGIN_PREFIX ?=		st
+LOGIN_SUFFIX ?=
 
 DHCPD_CONF_FILE ?=	/etc/dhcpd.conf
 MAC_PREFIX ?=		0a:00:
@@ -229,7 +230,9 @@ pf.vmredirs: gen-pf-redir-$g
 gen-pf-redir-$g: .USE
 	echo >>$@
 	while read -r n login junk; do \
-		uid=$${login#${LOGIN_PREFIX}}; \
+		uid=$$login; \
+		test -z "${LOGIN_PREFIX}" || uid=$${uid#${LOGIN_PREFIX}}; \
+		test -z "${LOGIN_SUFFIX}" || uid=$${uid%${LOGIN_SUFFIX}}; \
 		port=$$((${PF_PORT_BASE} + $$uid)); \
 		printf "match in log inet  proto tcp to port %d rdr-to %s%d port ssh tag %s\n" \
 		       $$port ${$g_ip4_base} $$n ${PF_TAG}; \
