@@ -2,7 +2,7 @@
 
 cat >>/etc/rc.firsttime <<EOF
 syspatch
-pkg_add nano vim--no_x11-perl-python3-ruby emacs--no_x11 pkglocatedb
+pkg_add git nano vim--no_x11-perl-python3-ruby emacs--no_x11 pkglocatedb
 pkg_info -M ruby | fgrep 'ln -sf' | sh
 EOF
 
