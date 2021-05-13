@@ -63,7 +63,7 @@ install-dhcpd:
 install-dns:
 	install -o root -g wheel -m 0644 dns_${DNS_FORW_ZONE} ${DNS_FORW_ZONE_FILE}
 	nsd-control reload ${DNS_FORW_ZONE}
-	install -o root -g wheel -m 0644 dns_${DNS_REV_ZONE} ${DNS_FORW_ZONE_FILE}
+	install -o root -g wheel -m 0644 dns_${DNS_REV_ZONE} ${DNS_REV_ZONE_FILE}
 	nsd-control reload ${DNS_REV_ZONE}
 
 install-pf:
