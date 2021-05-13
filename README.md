@@ -94,5 +94,5 @@ files in the place they belong:
 	make install-stor
 
 By default, this will put OpenBSD installer's answer files into `/instsrc/install`,
-and the siteXY.tgz will go into `/instsrc/pub/OpenBSD/6.9/amd64`; the index.txt
+and the siteXY.tgz will go into `/instsrc/pub/OpenBSD/X.Y/amd64`; the index.txt
 in the latter directory will be regenerated to make `siteXY.tgz` visible.
