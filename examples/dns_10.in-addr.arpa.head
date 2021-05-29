@@ -2,7 +2,7 @@ $TTL 86400
 $ORIGIN 10.in-addr.arpa.
 
 @	IN	SOA	ns.example.org.	admin.example.org. (
-						2021010101
+						%TIMESTAMP%
 						3H ; refresh
 						15 ; retry
 						1w ; expire
