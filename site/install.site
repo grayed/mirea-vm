@@ -8,3 +8,4 @@ EOF
 
 login=$(tail -1 /etc/passwd | awk -F : '{print $1}')
 usermod -G wsrc,wobj $login
+echo export LC_CTYPE=ru_RU.UTF-8 >>/home/$login/.profile
