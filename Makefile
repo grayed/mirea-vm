@@ -55,10 +55,10 @@ INST_SITE_TGZ =		site${INST_RELEASE:C/\.//}-${INST_ARCH}.tgz
 
 GENERATED_FILES_gw =	dhcpd.conf pf.vmredirs dns_${DNS_FORW_ZONE}
 GENERATED_FILES_gw +=	dns_${DNS_REV4_ZONE} dns_${DNS_REV6_ZONE}
-GENERATED_FILES_stor =	${INST_ANSWERS_COOKIE} ${INST_SITE_TGZ}
+GENERATED_FILES_stor =	${INST_ANSWERS_COOKIE} ${INST_SITE_TGZ} site-tmp
 GENERATED_FILES =	${GENERATED_FILES_gw} ${GENERATED_FILES_stor}
 
-INST_SITE_TGZ_DEPS !=	find ${.CURDIR}/site
+INST_SITE_TGZ_DEPS !=	cd ${.CURDIR}/site; find . | cut -c 3-
 
 INVERT_IPV6 = sed 's/./&./g' | awk -v RS=. // | tail -r \
 	| awk -v ORS= '{print "." $$0}'
@@ -72,7 +72,7 @@ all:
 	@false
 
 clean:
-	rm -f ${GENERATED_FILES}
+	rm -Rf ${GENERATED_FILES}
 
 gw: dhcpd.conf dns_${DNS_FORW_ZONE} dns_${DNS_REV4_ZONE} dns_${DNS_REV6_ZONE} pf.vmredirs
 
@@ -159,9 +159,17 @@ gen-pf-redir-head: .USE
 	echo -n >$@
 .endif
 
-${INST_SITE_TGZ}: ${INST_SITE_TGZ_DEPS}
-	(cd ${.CURDIR}/site; pax -wz install.site etc/*) >$@
+${INST_SITE_TGZ}: ${INST_SITE_TGZ_DEPS:C,^,site/,}
+	rm -Rf site-tmp
+	cp -R ${.CURDIR}/site site-tmp
+	mtree -U -p site-tmp -f ${.CURDIR}/site.mtree
+	(cd site-tmp; pax -wz $$(find . -type f | cut -c 3-) ) >$@
 
+.END:
+	rm -Rf site-tmp
+
+${INST_SITE_TGZ_DEPS}:
+	cp -
 
 .for g in ${GROUPS}
 $g_flow =	${g:C/_.*//}

@@ -1,0 +1,28 @@
+#	   user: pers
+#	machine: mireastor.my.domain
+#	   tree: /home/pers/mirea-vm/obj/site-tmp
+#	   date: Sat May 29 23:59:17 2021
+
+# .
+/set type=file uid=0 gid=0 mode=0755 nlink=1
+.               type=dir nlink=3 time=1620906212.184221830
+    install.site \
+                size=248 time=1620906212.184221830
+
+# ./etc
+/set type=file uid=0 gid=0 mode=0640 nlink=1
+etc             type=dir uid=0 gid=0 mode=0755 nlink=2 \
+                time=1622320561.32392854
+    doas.conf   mode=0600 size=21 time=1622320544.502029407
+    hostname.hvn0 \
+                size=5 time=1620894553.247784460
+    hostname.vio0 \
+                size=5 time=1620894553.247784460
+    hostname.vmx0 \
+                size=5 time=1620894553.255590948
+    sysctl.conf mode=0644 size=190 time=1622058413.161386825
+# ./etc
+..
+
+..
+
