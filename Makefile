@@ -24,6 +24,8 @@ INST_ARCH ?=		amd64
 
 TFTP_DIR ?=		/tftpboot
 
+ANSIBLE_ROOT ?=		/etc/ansible
+
 # end of customizable variables
 
 GROUPS !=		cd ${.CURDIR}/groups; ls *.group | sed -e 's/\.group$$//'
@@ -55,6 +57,7 @@ INST_SITE_TGZ =		site${INST_RELEASE:C/\.//}-${INST_ARCH}.tgz
 
 GENERATED_FILES_gw =	dhcpd.conf pf.vmredirs dns_${DNS_FORW_ZONE}
 GENERATED_FILES_gw +=	dns_${DNS_REV4_ZONE} dns_${DNS_REV6_ZONE}
+GENERATED_FILES_gw +=	ansible-hosts
 GENERATED_FILES_stor =	${INST_ANSWERS_COOKIE} ${INST_SITE_TGZ} site-tmp
 GENERATED_FILES =	${GENERATED_FILES_gw} ${GENERATED_FILES_stor}
 
@@ -63,8 +66,8 @@ INST_SITE_TGZ_DEPS !=	cd ${.CURDIR}/site; find . | cut -c 3-
 INVERT_IPV6 = sed 's/./&./g' | awk -v RS=. // | tail -r \
 	| awk -v ORS= '{print "." $$0}'
 
-.PHONY: all clean
-.PHONY: gw install-gw install-dhcpd install-dns install-pf
+.PHONY: all clean ansible
+.PHONY: gw install-gw install-ansible install-dhcpd install-dns install-pf
 .PHONY: stor install-stor install-answers install-site install-tftp
 
 all:
@@ -74,12 +77,21 @@ all:
 clean:
 	rm -Rf ${GENERATED_FILES}
 
-gw: dhcpd.conf dns_${DNS_FORW_ZONE} dns_${DNS_REV4_ZONE} dns_${DNS_REV6_ZONE} pf.vmredirs
+gw: dhcpd.conf dns_${DNS_FORW_ZONE} dns_${DNS_REV4_ZONE} dns_${DNS_REV6_ZONE} pf.vmredirs ansible
 
 stor: ${INST_ANSWERS_COOKIE} ${INST_SITE_TGZ} check-tftp
 
-install-gw: install-pf install-dhcpd install-dns
+ansible: ansible-hosts
+
+install-gw: install-pf install-dhcpd install-dns install-ansible
 install-stor: check-tftp install-answers install-site
+
+install-ansible:
+.if exists(${ANSIBLE_ROOT})
+	install -o root -g wheel -m 0644 ansible-hosts /etc/ansible/hosts
+.else
+	@echo INFO: Ansible not detected, nothing will be installed
+.endif
 
 install-answers:
 
@@ -90,10 +102,13 @@ install-dhcpd:
 install-dns:
 	install -o root -g wheel -m 0644 dns_${DNS_REV6_ZONE} ${DNS_REV6_ZONE_FILE}
 	nsd-control reload ${DNS_REV6_ZONE}
+	unbound-control flush_zone ${DNS_REV6_ZONE}
 	install -o root -g wheel -m 0644 dns_${DNS_REV4_ZONE} ${DNS_REV4_ZONE_FILE}
 	nsd-control reload ${DNS_REV4_ZONE}
+	unbound-control flush_zone ${DNS_REV4_ZONE}
 	install -o root -g wheel -m 0644 dns_${DNS_FORW_ZONE} ${DNS_FORW_ZONE_FILE}
 	nsd-control reload ${DNS_FORW_ZONE}
+	unbound-control flush_zone ${DNS_FORW_ZONE}
 
 install-pf:
 	install -o root -g wheel -m 0640 pf.vmredirs ${PF_REDIR_FILE}
@@ -166,6 +181,15 @@ ${INST_SITE_TGZ}: ${INST_SITE_TGZ_DEPS:C,^,site/,}
 	cp -R ${.CURDIR}/site site-tmp
 	mtree -U -p site-tmp -f ${.CURDIR}/site.mtree
 	(cd site-tmp; pax -wz $$(find . -type f | cut -c 3-) ) >$@
+
+templates/ansible-hosts.head templates/ansible-hosts.tail: .OPTIONAL
+.if exists(templates/ansible-hosts.head)
+ansible-hosts: templates/ansible-hosts.head
+.endif
+ansible-hosts: templates/ansible-hosts.head
+	echo "# Generated at: `date`" >$@
+	test -e "${.CURDIR}/templates/ansible-hosts.head" && \
+	cat "${.CURDIR}/templates/ansible-hosts.head" >>$@ || true
 
 .END:
 	rm -Rf site-tmp
@@ -278,6 +302,20 @@ gen-pf-redir-$g: .USE
 		       $$port ${$g_ip6_base} $$n ${PF_TAG}; \
 	done <${$g_input} >>$@
 
+ansible-hosts: ansible-hosts-$g
+ansible-hosts-$g: .USE ${$g_input}
+	echo >>$@
+	echo "[$g]" >>$@
+	while read -r n login junk; do \
+		printf "%s%d\n" "${$g_host_base}" "$$n"; \
+	done <${$g_input} >>$@
+	echo >>$@
+	echo "[$g:vars]" >>$@
+	echo "ansible_python_interpreter=/usr/local/bin/python3" >>$@
+# We're connecting as root
+#	echo "ansible_become=yes" >>$@
+#	echo "ansible_become_method=doas" >>$@
+
 .endfor
 
 ${GENERATED_FILES}: Makefile
@@ -291,3 +329,10 @@ pf.vmredirs: gen-pf-redir-tail templates/pf.vmredirs.tail
 gen-pf-redir-tail: .USE
 	cat ${.CURDIR}/templates/pf.vmredirs.tail >>$@
 .endif
+
+.if exists(templates/ansible-hosts.tail)
+ansible-hosts: ansible-hosts-tail
+.endif
+ansible-hosts-tail: .USE templates/ansible-hosts.tail
+	test -e "${.CURDIR}/templates/ansible-hosts.tail" && \
+	cat "${.CURDIR}/templates/ansible-hosts.tail" >>$@ || true
