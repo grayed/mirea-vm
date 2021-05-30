@@ -142,10 +142,12 @@ gen-dns-head: .USE
 	@test 0 -eq $$((${IPV6_PREFIX_LEN} % 16)) || \
 	    { echo "IPv6 prefix length be a multiple of 16" >&2; false; }
 
-	try=01; date=`date +%Y%m%d`; \
-	while grep -qw $$date$$try ${DNS_ZONES_DIR}/${@:C/^dns_//}; do \
-		try=`printf %02d $$(($$try + 1))`; \
-	done; \
+	serial=$$(perl -MParse::DNS::Zone -e \
+	   "\$$z=Parse::DNS::Zone->new(zonefile=>'/var/nsd/zones/master/mirea.lan', origin=>'mirea.lan.'); print \$$z->get_serial();"); \
+	echo serial=$$serial; \
+	test $$(echo -n "$$serial" | wc -c) -ne 10 && try=01 || try=$$(printf %02d $$(( $$(echo "$$serial" | cut -c 9-10) + 1)) ); \
+	echo try=$$try; \
+	date=`date +%Y%m%d`; \
 	sed "s/%TIMESTAMP%/$$date$$try/g" \
 	    "${.CURDIR}/templates/${@:C,.*/dns_,,}.head" >$@
 
